@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JAEWOO's MD → PDF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+  <!-- 배경 레이어 -->
+  <div class="bg-grid"></div>
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- 헤더 -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-dot"></span>
+        <span class="logo-text">md<span class="logo-sep">→</span>pdf</span>
+      </div>
+      <div class="header-badge">v1.0</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-wrap">
+
+      <!-- 히어로 타이틀 영역 -->
+      <div class="hero">
+        <div class="hero-eyebrow">
+          <span class="eyebrow-dot"></span>
+          Professional Markdown Converter
+          <span class="eyebrow-dot"></span>
+        </div>
+        <h1 class="hero-title">
+          <span class="title-name">JAEWOO's</span>
+          <span class="title-main">markdown to pdf</span>
+          <span class="title-tag">변환기</span>
+        </h1>
+        <p class="hero-sub">마크다운 파일을 드래그하면 고품질 PDF로 즉시 변환됩니다</p>
+
+        <!-- 데코 라인 -->
+        <div class="hero-divider">
+          <span class="divider-line"></span>
+          <span class="divider-icon">✦</span>
+          <span class="divider-line"></span>
+        </div>
+      </div>
+
+      <!-- 컨버터 카드 -->
+      <div class="card-wrap">
+        <div class="card">
+          <form id="convertForm" enctype="multipart/form-data">
+
+            <!-- Drop Zone -->
+            <div class="drop-zone" id="dropZone">
+              <div class="drop-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+              </div>
+              <p class="drop-label">드래그 앤 드롭 또는 <span class="drop-link">클릭하여 업로드</span></p>
+              <p class="drop-hint">.md 파일만 지원합니다</p>
+              <input type="file" id="fileInput" name="file" accept=".md" hidden>
+            </div>
+
+            <!-- File Info -->
+            <div class="file-info" id="fileInfo" hidden>
+              <div class="file-info-inner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span id="fileName">file.md</span>
+              </div>
+              <button type="button" class="file-remove" id="fileRemove" aria-label="파일 제거">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Theme Selector -->
+            <div class="theme-section">
+              <label class="section-label">
+                <span class="label-icon">◈</span> PDF 테마 선택
+              </label>
+              <div class="theme-grid">
+                <label class="theme-card active" data-theme="default">
+                  <input type="radio" name="theme" value="default" checked hidden>
+                  <div class="theme-preview theme-preview-default">
+                    <div class="tp-h1"></div>
+                    <div class="tp-line"></div>
+                    <div class="tp-line short"></div>
+                    <div class="tp-code"></div>
+                  </div>
+                  <span class="theme-name">Default</span>
+                </label>
+
+                <label class="theme-card" data-theme="github">
+                  <input type="radio" name="theme" value="github" hidden>
+                  <div class="theme-preview theme-preview-github">
+                    <div class="tp-h1"></div>
+                    <div class="tp-line"></div>
+                    <div class="tp-line short"></div>
+                    <div class="tp-code"></div>
+                  </div>
+                  <span class="theme-name">GitHub</span>
+                </label>
+
+                <label class="theme-card" data-theme="academic">
+                  <input type="radio" name="theme" value="academic" hidden>
+                  <div class="theme-preview theme-preview-academic">
+                    <div class="tp-h1 centered"></div>
+                    <div class="tp-line"></div>
+                    <div class="tp-line"></div>
+                    <div class="tp-line short"></div>
+                  </div>
+                  <span class="theme-name">Academic</span>
+                </label>
+
+                <label class="theme-card" data-theme="dark_print">
+                  <input type="radio" name="theme" value="dark_print" hidden>
+                  <div class="theme-preview theme-preview-dark">
+                    <div class="tp-h1"></div>
+                    <div class="tp-line"></div>
+                    <div class="tp-line short"></div>
+                    <div class="tp-code"></div>
+                  </div>
+                  <span class="theme-name">Dark</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- CTA Button -->
+            <button type="submit" class="btn-convert" id="convertBtn" disabled>
+              <span class="btn-text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                PDF로 변환하기
+              </span>
+              <span class="btn-spinner" hidden>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                변환 중...
+              </span>
+            </button>
+
+            <!-- Error Banner -->
+            <div class="error-banner" id="errorBanner" hidden>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span id="errorMsg">오류가 발생했습니다.</span>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- 카드 하단 스펙 배지들 -->
+        <div class="spec-row">
+          <span class="spec-chip">✓ 한글 완벽 지원</span>
+          <span class="spec-chip">✓ 4가지 테마</span>
+          <span class="spec-chip">✓ A4 최적화</span>
+          <span class="spec-chip">✓ 무료</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <p class="footer-text">Built with WeasyPrint &amp; FastAPI &nbsp;·&nbsp; JAEWOO © 2026</p>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

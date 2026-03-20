@@ -1,0 +1,95 @@
+body {
+  color: #e2e8f0;
+  background: #1a1a2e;
+  font-size: 10.5pt;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #f1f5f9;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 22pt;
+  border-bottom: 2px solid #6366f1;
+  padding-bottom: 0.3em;
+}
+
+h2 {
+  font-size: 16pt;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 0.2em;
+  color: #a5b4fc;
+}
+
+h3 {
+  color: #c7d2fe;
+}
+
+a {
+  color: #818cf8;
+}
+
+blockquote {
+  border-left-color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+  color: #cbd5e1;
+}
+
+table th {
+  background: #2d2d4e;
+  color: #e2e8f0;
+  border-color: #475569;
+  font-weight: 600;
+}
+
+table td {
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+table tr:nth-child(even) td {
+  background: #1e1e3a;
+}
+
+code {
+  background: #2d2d4e;
+  color: #a5b4fc;
+  border: 1px solid #334155;
+}
+
+pre {
+  background: #0f0f1a;
+  border: 1px solid #334155;
+}
+
+pre code {
+  color: #e2e8f0;
+  background: none;
+  border: none;
+}
+
+hr {
+  border-top-color: #334155;
+}
+
+/* Dark theme Pygments overrides */
+.codehilite .k { color: #c792ea; }
+.codehilite .kd { color: #c792ea; }
+.codehilite .kr { color: #c792ea; }
+.codehilite .kn { color: #c792ea; }
+.codehilite .s { color: #c3e88d; }
+.codehilite .s2 { color: #c3e88d; }
+.codehilite .s1 { color: #c3e88d; }
+.codehilite .c { color: #546e7a; font-style: italic; }
+.codehilite .c1 { color: #546e7a; font-style: italic; }
+.codehilite .cm { color: #546e7a; font-style: italic; }
+.codehilite .mi { color: #f78c6c; }
+.codehilite .mf { color: #f78c6c; }
+.codehilite .nf { color: #82aaff; }
+.codehilite .nc { color: #ffcb6b; }
+.codehilite .nb { color: #89ddff; }
+.codehilite .o { color: #89ddff; }
+.codehilite .ow { color: #89ddff; }
+.codehilite .na { color: #ffcb6b; }
