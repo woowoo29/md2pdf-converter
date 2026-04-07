@@ -51,7 +51,25 @@ class AppRouteTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["detail"], "Only .md files are supported.")
+        self.assertEqual(
+            response.json()["detail"],
+            "Only .md and .markdown files are supported.",
+        )
+
+    @patch("app.routers.convert.pdf_service.generate", return_value=b"%PDF-1.4 test")
+    def test_convert_accepts_markdown_extension(self, mock_generate):
+        response = self.client.post(
+            "/convert",
+            files={"file": ("notes.markdown", b"# Hello", "text/markdown")},
+            data={"theme": "default"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "filename*=UTF-8''notes.pdf",
+            response.headers["content-disposition"],
+        )
+        mock_generate.assert_called_once()
 
     def test_convert_rejects_non_utf8_content(self):
         response = self.client.post(

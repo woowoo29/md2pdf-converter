@@ -6,10 +6,10 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 
+from app import runtime_paths
 from app.services import markdown_service, pdf_service
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-templates = Jinja2Templates(directory=BASE_DIR / "app" / "templates")
+templates = Jinja2Templates(directory=runtime_paths.templates_dir())
 
 router = APIRouter()
 
@@ -29,8 +29,8 @@ async def convert(
     file: UploadFile = File(...),
     theme: str = Form(default="default"),
 ):
-    if not file.filename or not file.filename.endswith(".md"):
-        raise HTTPException(status_code=400, detail="Only .md files are supported.")
+    if not runtime_paths.supported_markdown_file(file.filename):
+        raise HTTPException(status_code=400, detail="Only .md and .markdown files are supported.")
 
     content = await file.read()
     try:

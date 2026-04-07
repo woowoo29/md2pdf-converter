@@ -1,25 +1,25 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+from app import runtime_paths
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    (BASE_DIR / "uploads").mkdir(exist_ok=True)
-    (BASE_DIR / "outputs").mkdir(exist_ok=True)
+    runtime_paths.ensure_runtime_directories()
     yield
 
 
-app = FastAPI(title="md → pdf", lifespan=lifespan)
+def create_app() -> FastAPI:
+    application = FastAPI(title="md → pdf", lifespan=lifespan)
+    application.mount("/static", StaticFiles(directory=runtime_paths.static_dir()), name="static")
+    application.mount("/themes", StaticFiles(directory=runtime_paths.themes_dir()), name="themes")
 
-app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
-app.mount("/themes", StaticFiles(directory=BASE_DIR / "app" / "themes"), name="themes")
+    from app.routers import convert  # noqa: E402
 
-templates = Jinja2Templates(directory=BASE_DIR / "app" / "templates")
+    application.include_router(convert.router)
+    return application
 
-from app.routers import convert  # noqa: E402
-app.include_router(convert.router)
+
+app = create_app()

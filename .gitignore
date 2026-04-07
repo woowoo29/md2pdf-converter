@@ -4,8 +4,13 @@ __pycache__/
 .env
 venv/
 .venv/
+.venv-desktop-build/
 uploads/
 outputs/
 *.pdf
 .DS_Store
 devlogs/
+build/
+dist/
+.pip-cache/
+md2pdf-converter.app
