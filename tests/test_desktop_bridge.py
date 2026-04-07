@@ -57,6 +57,22 @@ class DesktopBridgeTests(unittest.TestCase):
 
             self.assertEqual(payload, {"name": "notes.markdown", "content": "# Hello"})
 
+    def test_read_markdown_payload_handles_missing_file(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            missing_path = Path(tmp_dir) / "missing.md"
+
+            with self.assertRaisesRegex(ValueError, "could not be found"):
+                read_markdown_payload(missing_path)
+
+    def test_read_markdown_payload_handles_permission_error(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            markdown_path = Path(tmp_dir) / "notes.md"
+            markdown_path.write_text("# Hello", encoding="utf-8")
+
+            with patch.object(Path, "read_text", side_effect=PermissionError):
+                with self.assertRaisesRegex(ValueError, "permission to open"):
+                    read_markdown_payload(markdown_path)
+
     def test_save_pdf_returns_false_when_user_cancels(self):
         bridge = DesktopBridge(PendingOpenFiles(), save_dialog_type="save")
         bridge.attach_window(FakeWindow({"save": None}))
@@ -78,6 +94,40 @@ class DesktopBridgeTests(unittest.TestCase):
 
             self.assertTrue(result["saved"])
             self.assertEqual(output_path.read_bytes(), b"%PDF-1.4 desktop test")
+
+    def test_save_pdf_returns_error_for_invalid_base64(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            output_path = Path(tmp_dir) / "saved.pdf"
+            bridge = DesktopBridge(PendingOpenFiles(), save_dialog_type="save")
+            bridge.attach_window(FakeWindow({"save": [str(output_path)]}))
+
+            result = bridge.save_pdf("notes.pdf", "%%%not-base64%%%")
+
+            self.assertEqual(
+                result,
+                {"saved": False, "error": "Generated PDF data was invalid."},
+            )
+            self.assertFalse(output_path.exists())
+
+    def test_save_pdf_returns_error_when_write_fails(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            output_path = Path(tmp_dir) / "saved.pdf"
+            bridge = DesktopBridge(PendingOpenFiles(), save_dialog_type="save")
+            bridge.attach_window(FakeWindow({"save": [str(output_path)]}))
+
+            with patch.object(Path, "write_bytes", side_effect=PermissionError):
+                result = bridge.save_pdf(
+                    "notes.pdf",
+                    base64.b64encode(b"%PDF-1.4 desktop test").decode("ascii"),
+                )
+
+            self.assertEqual(
+                result,
+                {
+                    "saved": False,
+                    "error": "You do not have permission to save to that location.",
+                },
+            )
 
     def test_pending_open_file_is_consumed_once(self):
         pending_files = PendingOpenFiles()

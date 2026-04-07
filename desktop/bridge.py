@@ -1,4 +1,5 @@
 import base64
+import binascii
 from collections import deque
 from pathlib import Path
 from threading import Lock
@@ -15,8 +16,14 @@ def read_markdown_payload(path: str | Path) -> dict[str, str]:
 
     try:
         content = file_path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise ValueError("Selected file could not be found.") from exc
+    except PermissionError as exc:
+        raise ValueError("You do not have permission to open this file.") from exc
     except UnicodeDecodeError as exc:
         raise ValueError("File must be UTF-8 encoded.") from exc
+    except OSError as exc:
+        raise ValueError("Unable to read the selected file.") from exc
 
     return {"name": file_path.name, "content": content}
 
@@ -93,7 +100,18 @@ class DesktopBridge:
             return {"saved": False}
 
         output_path = Path(destination if isinstance(destination, str) else destination[0])
-        output_path.write_bytes(base64.b64decode(base64_pdf))
+        try:
+            pdf_bytes = base64.b64decode(base64_pdf, validate=True)
+        except (ValueError, binascii.Error):
+            return {"saved": False, "error": "Generated PDF data was invalid."}
+
+        try:
+            output_path.write_bytes(pdf_bytes)
+        except PermissionError:
+            return {"saved": False, "error": "You do not have permission to save to that location."}
+        except OSError:
+            return {"saved": False, "error": "Unable to save the PDF to that location."}
+
         return {"saved": True, "path": str(output_path)}
 
     def consume_pending_open_file(self) -> dict[str, str] | None:

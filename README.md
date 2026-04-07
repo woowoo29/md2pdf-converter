@@ -194,7 +194,7 @@ Because the build is unsigned, macOS may block the first launch. Open it with `C
 
 ### Sign and notarize for smooth macOS launches
 
-To reduce Gatekeeper warnings for other users, sign the root app bundle with your Developer ID certificate:
+To reduce Gatekeeper warnings for other users, sign the distributable `py2app` bundle in `dist/` with your Developer ID certificate:
 
 ```bash
 APPLE_CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
@@ -209,6 +209,8 @@ bash scripts/notarize_macos_app.sh
 ```
 
 If you do not have a notary profile yet, create one once with Apple's `xcrun notarytool store-credentials` flow and reuse that profile in future runs.
+
+The signing script targets `dist/md2pdf-converter.app` by default. The notarization script rebuilds the DMG from that signed bundle before submitting it to Apple, so the distributable DMG and the bundled app stay in sync.
 
 The desktop app now prefers a single running instance. Launching it again reuses the existing window and forwards newly opened Markdown files into that same session.
 
@@ -246,7 +248,7 @@ python -m unittest discover -s tests
 
 - The app is currently optimized for local/personal use.
 - WeasyPrint needs system libraries, so `run.sh` sets the required library path for macOS.
-- `launch_md2pdf.command` is kept as a browser-mode fallback and development launcher.
+- `launch_md2pdf.command` is kept as a browser-mode fallback and development launcher. If port `8000` is already in use by another local server, it now asks before stopping that process.
 - `python -m desktop` opens the same converter inside a native macOS window via `pywebview`.
 - The packaged desktop app is currently targeted at Apple Silicon Macs and unsigned local sharing.
 - The root `md2pdf-converter.app` is a local launcher wrapper, while the distributable unsigned bundle is packaged under `dist/`.

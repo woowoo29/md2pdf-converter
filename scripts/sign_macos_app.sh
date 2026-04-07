@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-APP_PATH="${1:-$PROJECT_DIR/md2pdf-converter.app}"
+APP_PATH="${1:-$PROJECT_DIR/dist/md2pdf-converter.app}"
 IDENTITY="${APPLE_CODESIGN_IDENTITY:-${2:-}}"
 ENTITLEMENTS_PATH="${APPLE_ENTITLEMENTS_PATH:-}"
 

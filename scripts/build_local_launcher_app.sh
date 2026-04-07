@@ -25,7 +25,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 PYTHON_BIN=""
 
-if [ -x "$PROJECT_DIR/.venv-desktop-build/bin/python" ]; then
+if [ -x "$PROJECT_DIR/.venv-desktop-build313/bin/python" ]; then
+  PYTHON_BIN="$PROJECT_DIR/.venv-desktop-build313/bin/python"
+elif [ -x "$PROJECT_DIR/.venv-desktop-build/bin/python" ]; then
   PYTHON_BIN="$PROJECT_DIR/.venv-desktop-build/bin/python"
 elif [ -x "$PROJECT_DIR/.venv/bin/python" ]; then
   PYTHON_BIN="$PROJECT_DIR/.venv/bin/python"
