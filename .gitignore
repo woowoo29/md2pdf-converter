@@ -8,7 +8,5 @@ uploads/
 outputs/
 *.pdf
 .DS_Store
-DEVLOG.md
-DEVLOG_학습용_문제만.md
-DEVLOG_학습용_정답포함.md
-DEVLOG_학습용_정답포함.pdf
+DEVLOG*.md
+DEVLOG*.pdf
