@@ -5,6 +5,7 @@ const fileName = document.getElementById('fileName');
 const fileRemove = document.getElementById('fileRemove');
 const convertBtn = document.getElementById('convertBtn');
 const convertForm = document.getElementById('convertForm');
+const nextConvertBtn = document.getElementById('nextConvertBtn');
 const errorBanner = document.getElementById('errorBanner');
 const errorMsg = document.getElementById('errorMsg');
 
@@ -20,6 +21,11 @@ fileInput.addEventListener('change', () => {
 fileRemove.addEventListener('click', (e) => {
   e.stopPropagation();
   clearFile();
+});
+
+nextConvertBtn.addEventListener('click', () => {
+  clearFile();
+  dropZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
 
 // --- Drag and drop ---
@@ -93,6 +99,7 @@ convertForm.addEventListener('submit', async (e) => {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+    nextConvertBtn.hidden = false;
 
   } catch (err) {
     showError(err.message || '변환 중 오류가 발생했습니다.');
@@ -105,18 +112,20 @@ convertForm.addEventListener('submit', async (e) => {
 function setFile(file) {
   selectedFile = file;
   fileName.textContent = file.name;
-  dropZone.style.display = 'none';
-  fileInfo.style.display = 'flex';
+  dropZone.hidden = true;
+  fileInfo.hidden = false;
   convertBtn.disabled = false;
+  nextConvertBtn.hidden = true;
   hideError();
 }
 
 function clearFile() {
   selectedFile = null;
   fileInput.value = '';
-  dropZone.style.display = '';
-  fileInfo.style.display = 'none';
+  dropZone.hidden = false;
+  fileInfo.hidden = true;
   convertBtn.disabled = true;
+  nextConvertBtn.hidden = true;
   hideError();
 }
 

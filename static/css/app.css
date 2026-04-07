@@ -535,6 +535,12 @@ main {
 .theme-card.active .theme-name { color: var(--accent-bright); }
 
 /* ── 변환 버튼 ── */
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .btn-convert {
   width: 100%;
   padding: 0.85rem 1.5rem;
@@ -580,6 +586,25 @@ main {
 .btn-convert:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.btn-reset {
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--accent-bright);
+  border: 1px solid rgba(99, 102, 241, 0.24);
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-reset:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(129, 140, 248, 0.45);
+  transform: translateY(-1px);
 }
 
 .btn-text {
