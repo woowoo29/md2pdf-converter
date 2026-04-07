@@ -1,8 +1,7 @@
 from io import BytesIO
 from pathlib import Path
+
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML, CSS
-from weasyprint.text.fonts import FontConfiguration
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 THEMES_DIR = BASE_DIR / "app" / "themes"
@@ -13,7 +12,22 @@ _jinja_env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)))
 VALID_THEMES = {"default", "github", "academic", "dark_print"}
 
 
+def _load_weasyprint():
+    try:
+        from weasyprint import CSS, HTML
+        from weasyprint.text.fonts import FontConfiguration
+    except (ImportError, OSError) as exc:
+        raise RuntimeError(
+            "WeasyPrint dependencies are not available. "
+            "Install the required system libraries and run the app via `run.sh`."
+        ) from exc
+
+    return HTML, CSS, FontConfiguration
+
+
 def generate(html_body: str, theme: str = "default") -> bytes:
+    HTML, CSS, FontConfiguration = _load_weasyprint()
+
     if theme not in VALID_THEMES:
         theme = "default"
 

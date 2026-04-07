@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("/")
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 
 @router.post("/convert")
@@ -35,10 +35,13 @@ async def convert(
 
     html_body = markdown_service.render(md_text)
 
-    loop = asyncio.get_event_loop()
-    pdf_bytes = await loop.run_in_executor(
-        None, pdf_service.generate, html_body, theme
-    )
+    loop = asyncio.get_running_loop()
+    try:
+        pdf_bytes = await loop.run_in_executor(
+            None, pdf_service.generate, html_body, theme
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     original_name = Path(file.filename).stem
     filename = f"{original_name}.pdf"
