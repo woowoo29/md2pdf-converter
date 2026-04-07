@@ -8,5 +8,4 @@ uploads/
 outputs/
 *.pdf
 .DS_Store
-DEVLOG*.md
-DEVLOG*.pdf
+devlogs/
