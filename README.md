@@ -1,5 +1,7 @@
 # md2pdf-converter
 
+[![CI](https://github.com/woowoo29/md2pdf-converter/actions/workflows/ci.yml/badge.svg)](https://github.com/woowoo29/md2pdf-converter/actions/workflows/ci.yml)
+
 Markdown files to polished PDF documents through a small FastAPI web app.
 
 This project started as a personal utility and a small end-to-end build exercise: upload a `.md` file, choose a print theme, and download a styled PDF. It now serves as a compact portfolio project that shows backend routing, template rendering, async integration with a synchronous library, and a lightweight frontend UX.
