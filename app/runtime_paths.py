@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 from pathlib import Path
 
@@ -7,7 +8,7 @@ MARKDOWN_SUFFIXES = {".md", ".markdown"}
 SOURCE_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_LIBRARY_DIRS = (
     Path("/opt/homebrew/lib"),
-    Path("/usr/local/lib"),
+    *(tuple() if platform.machine() == "arm64" else (Path("/usr/local/lib"),)),
 )
 APP_SUPPORT_SUBDIR = "md2pdf-converter"
 CONTROL_SOCKET_NAME = "desktop-instance.sock"
@@ -133,9 +134,19 @@ def dynamic_library_dirs() -> list[Path]:
     if bundled_frameworks is not None and bundled_frameworks.exists():
         candidates.append(bundled_frameworks)
 
-    for directory in DEFAULT_LIBRARY_DIRS:
+    python_library_dirs = (
+        Path(sys.base_prefix) / "lib",
+        Path(sys.prefix) / "lib",
+    )
+    conda_prefix = os.environ.get("CONDA_PREFIX")
+    conda_library_dir = Path(conda_prefix) / "lib" if conda_prefix else None
+
+    for directory in (*DEFAULT_LIBRARY_DIRS, *python_library_dirs):
         if directory.exists():
             candidates.append(directory)
+
+    if conda_library_dir is not None and conda_library_dir.exists():
+        candidates.append(conda_library_dir)
 
     return candidates
 

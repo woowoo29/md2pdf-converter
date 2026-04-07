@@ -1,13 +1,16 @@
-from pathlib import Path
+import os
+import platform
 import subprocess
+from pathlib import Path
+import sys
 
 from setuptools import setup
 
 
 APP = ["desktop/app.py"]
 APP_NAME = "md2pdf-converter"
+ICON_FILE = Path("assets/icon/md2pdf-converter.icns")
 RESOURCE_PATHS = ["app/templates", "app/themes", "static"]
-BREW_LIBRARY_ROOTS = (Path("/opt/homebrew/lib"), Path("/usr/local/lib"))
 FRAMEWORK_SEEDS = (
     "libpango-1.0.0.dylib",
     "libpangocairo-1.0.0.dylib",
@@ -32,18 +35,51 @@ FRAMEWORK_SEEDS = (
 )
 
 
+def library_search_roots() -> tuple[Path, ...]:
+    roots: list[Path] = [
+        Path("/opt/homebrew/lib"),
+        Path(sys.base_prefix) / "lib",
+        Path(sys.prefix) / "lib",
+    ]
+
+    if platform.machine() != "arm64":
+        roots.append(Path("/usr/local/lib"))
+
+    conda_prefix = os.environ.get("CONDA_PREFIX")
+    if conda_prefix:
+        roots.append(Path(conda_prefix) / "lib")
+
+    unique_roots: list[Path] = []
+    for root in roots:
+        if root.exists() and root not in unique_roots:
+            unique_roots.append(root)
+
+    return tuple(unique_roots)
+
+
 def _find_seed_libraries() -> list[Path]:
     seeds: list[Path] = []
-    for root in BREW_LIBRARY_ROOTS:
+    for root in library_search_roots():
         for filename in FRAMEWORK_SEEDS:
             candidate = root / filename
-            if candidate.exists():
+            if candidate.exists() and _supports_target_arch(candidate):
                 seeds.append(candidate)
     return seeds
 
 
 def _is_homebrew_library(path: str) -> bool:
-    return any(path.startswith(str(root)) for root in BREW_LIBRARY_ROOTS)
+    return any(path.startswith(str(root)) for root in library_search_roots())
+
+
+def _supports_target_arch(path: Path) -> bool:
+    target_arch = platform.machine()
+
+    try:
+        output = subprocess.check_output(["lipo", "-info", str(path)], text=True, stderr=subprocess.STDOUT)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return True
+
+    return target_arch in output
 
 
 def collect_frameworks() -> list[str]:
@@ -69,10 +105,53 @@ def collect_frameworks() -> list[str]:
                 continue
 
             dependency_path = Path(dependency)
-            if dependency_path.exists():
+            if dependency_path.exists() and _supports_target_arch(dependency_path):
                 queue.append(dependency_path)
 
     return sorted(discovered)
+
+
+def patch_py2app_recipes() -> None:
+    """Disable py2app's Tk probing for this app bundle.
+
+    WeasyPrint pulls in Pillow, and Pillow exposes optional tkinter helpers.
+    py2app's default tkinter recipe probes those modules by creating a Tk app,
+    which crashes the build on some macOS/Python combinations even though this
+    project never uses Tk.
+    """
+
+    try:
+        import py2app.recipes.tkinter as tkinter_recipe
+    except Exception:
+        tkinter_recipe = None
+
+    if tkinter_recipe is not None:
+        tkinter_recipe.check = lambda cmd, mf: None
+
+    try:
+        import py2app.recipes.PIL as pil_recipe
+    except Exception:
+        pil_recipe = None
+
+    if pil_recipe is not None:
+        original_check = pil_recipe.check
+
+        def patched_pil_check(cmd, mf):
+            result = original_check(cmd, mf)
+
+            for module_name in ("PIL.features", "PIL._tkinter_finder", "PIL.ImageTk"):
+                node = mf.findNode(module_name)
+                if node is None:
+                    continue
+                for ref in ("PIL._tkinter_finder", "tkinter", "_tkinter", "ImageTk"):
+                    try:
+                        mf.removeReference(node, ref)
+                    except Exception:
+                        continue
+
+            return result
+
+        pil_recipe.check = patched_pil_check
 
 
 plist = {
@@ -97,6 +176,9 @@ OPTIONS = {
     "argv_emulation": False,
     "frameworks": collect_frameworks(),
     "excludes": [
+        "FixTk",
+        "PIL.ImageTk",
+        "PIL._tkinter_finder",
         "Tkinter",
         "_tkinter",
         "tkinter",
@@ -127,13 +209,50 @@ OPTIONS = {
         "uvicorn.protocols.websockets.auto",
         "webview",
         "weasyprint",
+        "zoneinfo",
     ],
-    "packages": ["app", "desktop"],
+    "packages": [
+        "PIL",
+        "aiofiles",
+        "anyio",
+        "app",
+        "cffi",
+        "cssselect2",
+        "desktop",
+        "dotenv",
+        "fastapi",
+        "fontTools",
+        "httpcore",
+        "httpx",
+        "jinja2",
+        "markdown",
+        "multipart",
+        "pydantic",
+        "pydantic_core",
+        "pymdownx",
+        "pyphen",
+        "starlette",
+        "tinycss2",
+        "tinyhtml5",
+        "uvicorn",
+        "watchfiles",
+        "websockets",
+        "webview",
+        "weasyprint",
+        "yaml",
+        "zoneinfo",
+    ],
     "plist": plist,
     "resources": RESOURCE_PATHS,
-    "site_packages": True,
+    "site_packages": False,
     "strip": False,
 }
+
+patch_py2app_recipes()
+
+if ICON_FILE.exists():
+    OPTIONS["iconfile"] = str(ICON_FILE)
+    plist["CFBundleIconFile"] = ICON_FILE.name
 
 
 setup(
