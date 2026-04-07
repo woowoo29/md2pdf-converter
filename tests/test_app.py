@@ -20,6 +20,12 @@ class AppRouteTests(unittest.TestCase):
         self.assertIn("markdown to pdf", response.text.lower())
         self.assertIn("nextConvertBtn", response.text)
 
+    def test_healthz_returns_ok(self):
+        response = self.client.get("/healthz")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
     @patch("app.routers.convert.pdf_service.generate", return_value=b"%PDF-1.4 test")
     def test_convert_returns_pdf_download(self, mock_generate):
         response = self.client.post(

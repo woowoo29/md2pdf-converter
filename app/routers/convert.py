@@ -19,6 +19,11 @@ async def index(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+@router.get("/healthz")
+async def healthz():
+    return {"status": "ok"}
+
+
 @router.post("/convert")
 async def convert(
     file: UploadFile = File(...),
