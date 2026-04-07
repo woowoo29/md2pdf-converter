@@ -62,6 +62,7 @@ md2pdf-converter/
 ├── tests/
 ├── LICENSE
 ├── README.md
+├── launch_md2pdf.command
 ├── requirements.txt
 └── run.sh
 ```
@@ -86,9 +87,17 @@ pip install -r requirements.txt
 
 ### 3. Run the app
 
+Option A: start from Terminal
+
 ```bash
 ./run.sh
 ```
+
+Option B: start from Finder on macOS
+
+- Double-click `launch_md2pdf.command`
+- The launcher opens `http://127.0.0.1:8000` automatically
+- If an old local server is still attached to port `8000`, the launcher restarts it with the current project path
 
 Then open:
 
@@ -108,6 +117,7 @@ python -m unittest discover -s tests
 
 - The app is currently optimized for local/personal use.
 - WeasyPrint needs system libraries, so `run.sh` sets the required library path for macOS.
+- `launch_md2pdf.command` is a macOS convenience launcher for double-click startup.
 - For a public deployment, file-size limits, sanitization rules, and more defensive error handling would be the next steps.
 
 ## License
