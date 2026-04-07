@@ -1,6 +1,7 @@
 # md2pdf-converter
 
 [![CI](https://github.com/woowoo29/md2pdf-converter/actions/workflows/ci.yml/badge.svg)](https://github.com/woowoo29/md2pdf-converter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 Markdown files to polished PDF documents through a small FastAPI web app.
 
