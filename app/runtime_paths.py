@@ -6,12 +6,13 @@ from pathlib import Path
 
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
 SOURCE_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_LIBRARY_DIRS = (
+SOURCE_LIBRARY_DIRS = (
     Path("/opt/homebrew/lib"),
     *(tuple() if platform.machine() == "arm64" else (Path("/usr/local/lib"),)),
 )
 APP_SUPPORT_SUBDIR = "md2pdf-converter"
 CONTROL_SOCKET_NAME = "desktop-instance.sock"
+LOG_FILENAME = "app.log"
 
 
 def is_bundled() -> bool:
@@ -60,13 +61,6 @@ def static_dir() -> Path:
     return resource_root() / "static"
 
 
-def app_dir() -> Path:
-    bundled_app_dir = resource_root() / "app"
-    if bundled_app_dir.exists():
-        return bundled_app_dir
-    return resource_root()
-
-
 def templates_dir() -> Path:
     if is_bundled():
         candidates = [
@@ -111,14 +105,48 @@ def outputs_dir() -> Path:
     return writable_data_root() / "outputs"
 
 
+def cache_dir() -> Path:
+    return writable_data_root() / "cache"
+
+
+def logs_dir() -> Path:
+    return writable_data_root() / "logs"
+
+
+def diagnostics_log_path() -> Path:
+    return logs_dir() / LOG_FILENAME
+
+
 def control_socket_path() -> Path:
     return writable_data_root() / CONTROL_SOCKET_NAME
+
+
+def bundled_fontconfig_dir() -> Path:
+    return resource_root() / "etc" / "fonts"
+
+
+def bundled_fontconfig_file() -> Path:
+    return bundled_fontconfig_dir() / "fonts.conf"
+
+
+def bundled_gio_modules_dir() -> Path:
+    return resource_root() / "lib" / "gio" / "modules"
+
+
+def bundled_gdk_pixbuf_module_dir() -> Path:
+    return resource_root() / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders"
+
+
+def bundled_gdk_pixbuf_module_file() -> Path:
+    return resource_root() / "lib" / "gdk-pixbuf-2.0" / "2.10.0" / "loaders.cache"
 
 
 def ensure_runtime_directories() -> None:
     writable_data_root().mkdir(parents=True, exist_ok=True)
     uploads_dir().mkdir(exist_ok=True)
     outputs_dir().mkdir(exist_ok=True)
+    cache_dir().mkdir(exist_ok=True)
+    logs_dir().mkdir(exist_ok=True)
 
 
 def supported_markdown_file(filename: str | None) -> bool:
@@ -134,6 +162,9 @@ def dynamic_library_dirs() -> list[Path]:
     if bundled_frameworks is not None and bundled_frameworks.exists():
         candidates.append(bundled_frameworks)
 
+    if is_bundled():
+        return candidates
+
     python_library_dirs = (
         Path(sys.base_prefix) / "lib",
         Path(sys.prefix) / "lib",
@@ -141,7 +172,7 @@ def dynamic_library_dirs() -> list[Path]:
     conda_prefix = os.environ.get("CONDA_PREFIX")
     conda_library_dir = Path(conda_prefix) / "lib" if conda_prefix else None
 
-    for directory in (*DEFAULT_LIBRARY_DIRS, *python_library_dirs):
+    for directory in (*SOURCE_LIBRARY_DIRS, *python_library_dirs):
         if directory.exists():
             candidates.append(directory)
 
@@ -151,15 +182,31 @@ def dynamic_library_dirs() -> list[Path]:
     return candidates
 
 
-def configure_dynamic_library_paths() -> None:
-    library_dirs = [str(path) for path in dynamic_library_dirs()]
-    if not library_dirs:
+def _set_or_clear_bundle_env(env_key: str, path: Path) -> None:
+    if path.exists():
+        os.environ[env_key] = str(path.resolve())
         return
 
-    for env_key in ("DYLD_FALLBACK_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
-        existing = [entry for entry in os.environ.get(env_key, "").split(":") if entry]
-        merged: list[str] = []
-        for entry in [*library_dirs, *existing]:
-            if entry not in merged:
-                merged.append(entry)
-        os.environ[env_key] = ":".join(merged)
+    os.environ.pop(env_key, None)
+
+
+def configure_dynamic_library_paths() -> None:
+    library_dirs = [str(path) for path in dynamic_library_dirs()]
+    if library_dirs:
+        for env_key in ("DYLD_FALLBACK_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
+            existing = [entry for entry in os.environ.get(env_key, "").split(":") if entry]
+            merged: list[str] = []
+            for entry in [*library_dirs, *existing]:
+                if entry not in merged:
+                    merged.append(entry)
+            os.environ[env_key] = ":".join(merged)
+
+    if not is_bundled():
+        return
+
+    os.environ["XDG_CACHE_HOME"] = str(cache_dir().resolve())
+    _set_or_clear_bundle_env("FONTCONFIG_PATH", bundled_fontconfig_dir())
+    _set_or_clear_bundle_env("FONTCONFIG_FILE", bundled_fontconfig_file())
+    _set_or_clear_bundle_env("GIO_MODULE_DIR", bundled_gio_modules_dir())
+    _set_or_clear_bundle_env("GDK_PIXBUF_MODULEDIR", bundled_gdk_pixbuf_module_dir())
+    _set_or_clear_bundle_env("GDK_PIXBUF_MODULE_FILE", bundled_gdk_pixbuf_module_file())

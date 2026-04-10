@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -7,6 +8,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app import runtime_paths
+from app.services import markdown_service, pdf_service
 from desktop.bridge import DesktopBridge, PendingOpenFiles
 from desktop.server import DesktopServer
 from desktop.single_instance import SingleInstanceController
@@ -15,6 +17,20 @@ from desktop.single_instance import SingleInstanceController
 APP_TITLE = "md2pdf-converter"
 WINDOW_SIZE = (1240, 900)
 WINDOW_MIN_SIZE = (980, 760)
+
+
+def _run_bundle_smoke_test() -> None:
+    html_body = markdown_service.render("# Smoke Test\n\nThis verifies the bundled PDF runtime.")
+    pdf_bytes = pdf_service.generate(html_body, "default")
+    if not pdf_bytes.startswith(b"%PDF"):
+        raise RuntimeError("Smoke test PDF generation did not return a valid PDF header.")
+
+    if os.environ.get("MD2PDF_SMOKE_TEST_SKIP_SERVER") == "1":
+        return
+
+    server = DesktopServer()
+    server.start()
+    server.stop()
 
 
 def _collect_initial_open_paths() -> list[Path]:
@@ -61,6 +77,10 @@ def _install_open_file_delegate(pending_files: PendingOpenFiles):
 def main() -> None:
     runtime_paths.configure_dynamic_library_paths()
     runtime_paths.ensure_runtime_directories()
+
+    if os.environ.get("MD2PDF_SMOKE_TEST") == "1":
+        _run_bundle_smoke_test()
+        return
 
     initial_paths = _collect_initial_open_paths()
     instance_controller = SingleInstanceController()

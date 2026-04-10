@@ -7,7 +7,7 @@ import sys
 from setuptools import setup
 
 
-APP = ["desktop/app.py"]
+APP = ["desktop_bundle.py"]
 APP_NAME = "md2pdf-converter"
 ICON_FILE = Path("assets/icon/md2pdf-converter.icns")
 RESOURCE_PATHS = ["app/templates", "app/themes", "static"]
@@ -16,6 +16,7 @@ FRAMEWORK_SEEDS = (
     "libpangocairo-1.0.0.dylib",
     "libpangoft2-1.0.0.dylib",
     "libharfbuzz.0.dylib",
+    "libharfbuzz-subset.0.dylib",
     "libglib-2.0.0.dylib",
     "libgobject-2.0.0.dylib",
     "libgio-2.0.0.dylib",
@@ -158,8 +159,8 @@ plist = {
     "CFBundleName": APP_NAME,
     "CFBundleDisplayName": APP_NAME,
     "CFBundleIdentifier": "com.woowoo29.md2pdf-converter",
-    "CFBundleShortVersionString": "3.0.0",
-    "CFBundleVersion": "3.0.0",
+    "CFBundleShortVersionString": "3.1.0",
+    "CFBundleVersion": "3.1.0",
     "LSMinimumSystemVersion": "13.0",
     "NSHighResolutionCapable": True,
     "CFBundleDocumentTypes": [
@@ -185,6 +186,7 @@ OPTIONS = {
     ],
     "includes": [
         "app.main",
+        "app.diagnostics",
         "app.routers.convert",
         "app.services.markdown_service",
         "app.services.pdf_service",

@@ -7,6 +7,7 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_DIR"
 
 APP_NAME="md2pdf-converter.app"
+APP_EXECUTABLE="md2pdf-converter"
 DMG_NAME="md2pdf-converter-unsigned.dmg"
 DIST_DIR="$PROJECT_DIR/dist"
 ROOT_APP_PATH="$PROJECT_DIR/$APP_NAME"
@@ -18,6 +19,8 @@ BUILD_VENV_PY313="$PROJECT_DIR/.venv-desktop-build313"
 ICON_SOURCE="$PROJECT_DIR/assets/icon/source/md2pdf-icon-1024.png"
 ICON_ICNS="$PROJECT_DIR/assets/icon/md2pdf-converter.icns"
 LOCAL_LAUNCHER_SCRIPT="$PROJECT_DIR/scripts/build_local_launcher_app.sh"
+POSTPROCESS_SCRIPT="$PROJECT_DIR/scripts/postprocess_distribution_bundle.py"
+VERIFY_SCRIPT="$PROJECT_DIR/scripts/verify_distribution_bundle.py"
 
 if [ -n "${VIRTUAL_ENV:-}" ] && [ -x "$VIRTUAL_ENV/bin/python" ]; then
   PYTHON_BIN="$VIRTUAL_ENV/bin/python"
@@ -53,12 +56,22 @@ DYLD_LIBRARY_PATH="$BUILD_LIBRARY_PATH" \
 DYLD_FALLBACK_LIBRARY_PATH="$BUILD_LIBRARY_PATH" \
   "$PYTHON_BIN" setup.py py2app
 
-# Re-sign the bundle after py2app assembles nested frameworks so Finder can launch it.
+if [ -f "$POSTPROCESS_SCRIPT" ]; then
+  "$PYTHON_BIN" "$POSTPROCESS_SCRIPT" "$DIST_DIR/$APP_NAME"
+fi
+
+# Re-sign the bundle after post-processing nested frameworks so Finder can launch it.
 # Some bundled Homebrew dylibs may still trigger strict-validation warnings, but the
 # app can remain launchable in local unsigned distribution mode.
 if ! codesign --force --deep --sign - --timestamp=none "$DIST_DIR/$APP_NAME"; then
   echo "Warning: ad-hoc codesign reported validation issues; continuing with local unsigned bundle." >&2
 fi
+
+if [ -f "$VERIFY_SCRIPT" ]; then
+  "$PYTHON_BIN" "$VERIFY_SCRIPT" "$DIST_DIR/$APP_NAME"
+fi
+
+MD2PDF_SMOKE_TEST=1 "$DIST_DIR/$APP_NAME/Contents/MacOS/$APP_EXECUTABLE"
 
 mkdir -p "$DMG_ROOT"
 cp -R "$DIST_DIR/$APP_NAME" "$DMG_ROOT/"
@@ -85,8 +98,7 @@ fi
 
 rm -rf build
 
-echo "Built local launcher app at $ROOT_APP_PATH"
-echo "Built py2app bundle at $DIST_DIR/$APP_NAME"
+echo "Built distributable py2app bundle at $DIST_DIR/$APP_NAME"
 if [ -f "$DMG_PATH" ]; then
-  echo "Built unsigned DMG at $DMG_PATH"
+  echo "Built unsigned Apple Silicon DMG at $DMG_PATH"
 fi

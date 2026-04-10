@@ -10,16 +10,27 @@ is_md2pdf_running() {
   curl -fs "$HEALTH_URL" 2>/dev/null | grep -q '"status":"ok"\|"status": "ok"'
 }
 
-restart_stale_md2pdf() {
-  local listener_pids
-  listener_pids="$(lsof -tiTCP:8000 -sTCP:LISTEN 2>/dev/null || true)"
+stop_listener_processes() {
+  local listener_pids="$1"
+  local remaining_pids
 
-  if [ -n "$listener_pids" ]; then
-    kill $listener_pids >/dev/null 2>&1 || true
+  if [ -z "$listener_pids" ]; then
+    return 0
   fi
 
-  pkill -f "uvicorn app.main:app" >/dev/null 2>&1 || true
-  sleep 1
+  kill $listener_pids >/dev/null 2>&1 || true
+
+  for _ in 1 2 3 4 5; do
+    sleep 1
+    if ! lsof -nP -iTCP:8000 -sTCP:LISTEN >/dev/null 2>&1; then
+      return 0
+    fi
+  done
+
+  remaining_pids="$(lsof -tiTCP:8000 -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -n "$remaining_pids" ]; then
+    kill -9 $remaining_pids >/dev/null 2>&1 || true
+  fi
 }
 
 describe_listener() {
@@ -73,7 +84,7 @@ fi
 if lsof -nP -iTCP:8000 -sTCP:LISTEN >/dev/null 2>&1; then
   listener_pids="$(lsof -tiTCP:8000 -sTCP:LISTEN 2>/dev/null || true)"
   if confirm_restart_existing_server "$listener_pids"; then
-    restart_stale_md2pdf
+    stop_listener_processes "$listener_pids"
   else
     exit 0
   fi
